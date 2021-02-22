@@ -52,21 +52,26 @@ TEST_SUITE(Deadlock) {
 
       // Fiber routines
 
-      int first_instances = 0;
-      int second_instances = 0;
-
       auto first = [&]() {
-        ++first_instances;
-        if (first_instances == 3) {
-          a.Lock();
+        a.Lock();
+        Yield();
+        if (b.try_lock()) {  // If other did not lock b
+          b.Unlock();
+          a.Unlock();
+        } else {
+          a.Lock();  // Will always be deadlocked
         }
         // Use Yield() to reschedule current fiber
       };
 
       auto second = [&]() {
-        ++second_instances;
-        if (second_instances == 3) {
-          a.Lock();
+        b.Lock();
+        Yield();
+        if (a.try_lock()) {  // If other did not lock a
+          a.Unlock();
+          b.Unlock();
+        } else {
+          b.Lock();  // Will always be deadlocked
         }
       };
 
