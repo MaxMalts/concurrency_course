@@ -41,7 +41,7 @@ class StaticThreadPool {
   void Worker();
   void JoinWorkers();
 
-  std::vector<std::thread> workers_;
+  std::vector<twist::stdlike::thread> workers_;
   UnboundedBlockingQueue<Task> tasks_;
   twist::stdlike::atomic<uint32_t> tasks_pending_{0};
 

@@ -42,7 +42,7 @@ void StaticThreadPool::Shutdown() {
 }
 
 void StaticThreadPool::JoinWorkers() {
-  for (std::thread& worker : workers_) {
+  for (twist::stdlike::thread& worker : workers_) {
     worker.join();
   }
   closed_ = true;
