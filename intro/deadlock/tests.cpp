@@ -55,24 +55,16 @@ TEST_SUITE(Deadlock) {
       auto first = [&]() {
         a.Lock();
         Yield();
-        if (b.try_lock()) {  // If other did not lock b
-          b.Unlock();
-          a.Unlock();
-        } else {
-          a.Lock();  // Will always be deadlocked
-        }
-        // Use Yield() to reschedule current fiber
+        b.Lock();
+        a.Unlock();
+        b.Unlock();
       };
 
       auto second = [&]() {
         b.Lock();
-        Yield();
-        if (a.try_lock()) {  // If other did not lock a
-          a.Unlock();
-          b.Unlock();
-        } else {
-          b.Lock();  // Will always be deadlocked
-        }
+        a.Lock();
+        a.Unlock();
+        b.Unlock();
       };
 
       // No deadlock with one fiber
