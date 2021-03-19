@@ -6,6 +6,15 @@
 // Saved execution context
 struct JumpContext {
   uint64_t ret_addr;
+  uint64_t RBX;
+  uint64_t RBP;
+  uint64_t RDI;
+  uint64_t RSI;
+  uint64_t RSP;
+  uint64_t R12;
+  uint64_t R13;
+  uint64_t R14;
+  uint64_t R15;
 };
 
 // Captures the current execution context into 'ctx'
