@@ -1,7 +1,6 @@
 #include <tp/static_thread_pool.hpp>
 
 #include <tp/helpers.hpp>
-#include <wheels/test/test_framework.hpp>
 
 #include <twist/util/thread_local.hpp>
 
@@ -52,8 +51,8 @@ StaticThreadPool* StaticThreadPool::Current() {
   return *pool;
 }
 
-void StaticThreadPool::InitWorkers(size_t n_workers) {
-  for (size_t i = 0; i < n_workers; ++i) {
+void StaticThreadPool::InitWorkers(size_t num_workers) {
+  for (size_t i = 0; i < num_workers; ++i) {
     workers_.emplace_back([this] {
       *pool = this;
       Worker();
@@ -62,15 +61,11 @@ void StaticThreadPool::InitWorkers(size_t n_workers) {
 }
 
 void StaticThreadPool::Worker() {
-  std::optional<Task> cur_task = tasks_.Take();
-
-  while (cur_task != std::nullopt) {
-    ExecuteHere(cur_task.value());
+  while (auto task = tasks_.Take()) {
+    ExecuteHere(task.value());
     if (tasks_pending_.fetch_sub(1) == 1 && joined_.load() == 1) {
       tasks_.Close();
     }
-
-    cur_task = tasks_.Take();
   }
 }
 

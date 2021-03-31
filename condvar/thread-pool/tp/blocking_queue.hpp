@@ -15,7 +15,7 @@ template <typename T>
 class UnboundedBlockingQueue {
  public:
   bool Put(T value) {
-    std::lock_guard<twist::stdlike::mutex> lock(mutex_);
+    std::lock_guard lock(mutex_);
 
     if (!closed_) {
       data_.emplace(std::move(value));
@@ -27,7 +27,7 @@ class UnboundedBlockingQueue {
   }
 
   std::optional<T> Take() {
-    std::unique_lock<twist::stdlike::mutex> lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     while (data_.empty()) {
       if (closed_) {
@@ -38,7 +38,7 @@ class UnboundedBlockingQueue {
 
     T value(std::move(data_.front()));
     data_.pop();
-    return std::optional<T>(std::move(value));
+    return {std::move(value)};
   }
 
   void Close() {
@@ -51,7 +51,7 @@ class UnboundedBlockingQueue {
 
  private:
   void CloseImpl(bool clear) {
-    std::unique_lock<twist::stdlike::mutex> lock(mutex_);
+    std::unique_lock lock(mutex_);
 
     if (clear) {
       data_ = std::queue<T>();
