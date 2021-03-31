@@ -62,16 +62,15 @@ void StaticThreadPool::InitWorkers(size_t n_workers) {
 }
 
 void StaticThreadPool::Worker() {
-  while (true) {
-    std::optional<Task> cur_task = tasks_.Take();
-    if (cur_task == std::nullopt) {
-      break;
-    }
+  std::optional<Task> cur_task = tasks_.Take();
 
+  while (cur_task != std::nullopt) {
     ExecuteHere(cur_task.value());
     if (tasks_pending_.fetch_sub(1) == 1 && joined_.load() == 1) {
       tasks_.Close();
     }
+
+    cur_task = tasks_.Take();
   }
 }
 

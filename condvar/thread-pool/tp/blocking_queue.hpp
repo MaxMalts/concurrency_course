@@ -19,7 +19,7 @@ class UnboundedBlockingQueue {
 
     if (!closed_) {
       data_.emplace(std::move(value));
-      wait_nempty_.notify_all();
+      wait_nempty_.notify_one();
       return true;
     } else {
       return false;
