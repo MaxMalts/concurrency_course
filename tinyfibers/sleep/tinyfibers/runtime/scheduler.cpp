@@ -64,8 +64,8 @@ void Scheduler::Yield() {
 void Scheduler::SleepFor(Duration delay) {
   Fiber* caller = GetCurrentFiber();
 
-  caller->sleep_timer_.expires_after(delay);
-  caller->sleep_timer_.async_wait([this, caller](const asio::error_code&) {
+  WaitableTimer timer(event_loop_, delay);
+  timer.async_wait([this, caller](const asio::error_code&) {
     Resume(caller);
   });
 
