@@ -17,13 +17,6 @@ class TASSpinLock {
   }
 
   bool TryLock() {
-    //  if (AtomicExchange(&locked_, 1) != 0) {
-    //    return false;
-    //  } else {
-    //    return true;
-    //  }
-    //  Equivalent to:
-
     return AtomicExchange(&locked_, 1) == 0;
   }
 
