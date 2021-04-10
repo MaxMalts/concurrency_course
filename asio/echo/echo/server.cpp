@@ -30,22 +30,23 @@ class Session : public std::enable_shared_from_this<Session> {
     auto self = shared_from_this();
     socket_.async_read_some(
         asio::buffer(buffer_, kBufferSize),
-        [this, self](std::error_code error_code, std::size_t bytes_read) {
+        [self_moved = std::move(self)](std::error_code error_code,
+                                       std::size_t bytes_read) {
           if (!error_code) {
-            WriteChunk(bytes_read);
+            self_moved->WriteChunk(bytes_read);
           }
         });
   }
 
   void WriteChunk(size_t bytes) {
     auto self = shared_from_this();
-    asio::async_write(
-        socket_, asio::buffer(buffer_, bytes),
-        [self, this](std::error_code error_code, std::size_t /*bytes*/) {
-          if (!error_code) {
-            this->ReadChunk();
-          }
-        });
+    asio::async_write(socket_, asio::buffer(buffer_, bytes),
+                      [self_moved = std::move(self)](std::error_code error_code,
+                                                     std::size_t /*bytes*/) {
+                        if (!error_code) {
+                          self_moved->ReadChunk();
+                        }
+                      });
   }
 
  private:
