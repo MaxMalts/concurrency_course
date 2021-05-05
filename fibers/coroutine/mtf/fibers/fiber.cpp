@@ -8,8 +8,6 @@
 
 #include <vector>
 
-#include <iostream>
-
 namespace mtf::fibers {
 
 using coroutine::impl::Coroutine;
