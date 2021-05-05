@@ -9,13 +9,13 @@ class TASSpinLock {
  public:
   void Lock() {
     while (locked_.exchange(1) != 0) {
-      while (locked_.load()) {
+      while (locked_.load() == 1) {
         wheels::SpinLockPause();
       }
     }
   }
 
-  void lock() {
+  void lock() {  // NOLINT
     Lock();
   }
 
@@ -27,7 +27,7 @@ class TASSpinLock {
     locked_.store(0);
   }
 
-  void unlock() {
+  void unlock() {  // NOLINT
     Unlock();
   }
 

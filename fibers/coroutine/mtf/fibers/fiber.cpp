@@ -17,34 +17,30 @@ using tp::StaticThreadPool;
 
 class StackPool {
  public:
-  context::Stack* Acquire() {
+  context::Stack Acquire() {
     std::unique_lock lock(mutex_);
 
     if (free_stacks_.empty()) {
       lock.unlock();
-      context::Stack new_stack = AllocateStack();
-      lock.lock();
-
-      stacks_.push_back(std::move(new_stack));
-      return &stacks_.back();
+      return AllocateStack();
     }
 
-    context::Stack* res = free_stacks_.back();
+    context::Stack stack = std::move(free_stacks_.back());
     free_stacks_.pop_back();
-    return res;
+    return stack;
   }
 
-  void Release(context::Stack* stack) {
+  void Release(context::Stack stack) {
     std::lock_guard lock(mutex_);
-    free_stacks_.push_back(stack);
+    free_stacks_.push_back(std::move(stack));
   }
 
  private:
-  std::vector<context::Stack> stacks_;
-  std::vector<context::Stack*> free_stacks_;
+  std::vector<context::Stack> free_stacks_;
   TASSpinLock mutex_;
+};
 
-} stack_pool;
+thread_local StackPool stack_pool;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +52,7 @@ class Fiber {
  public:
   Fiber(Routine routine, StaticThreadPool& scheduler)
       : stack_(stack_pool.Acquire()),
-        coroutine_(std::move(routine), stack_->View()),
+        coroutine_(std::move(routine), stack_.View()),
         scheduler_(scheduler) {
     scheduler_.Submit([this]() {
       Worker();
@@ -74,10 +70,8 @@ class Fiber {
       });
 
     } else {
-      scheduler_.SubmitContinuation([this]() {
-        stack_pool.Release(stack_);
-        delete this;
-      });
+      stack_pool.Release(std::move(stack_));
+      delete this;
     }
   }
 
@@ -86,7 +80,7 @@ class Fiber {
   }
 
  private:
-  context::Stack* stack_;
+  context::Stack stack_;
   Coroutine coroutine_;
   StaticThreadPool& scheduler_;
 };
