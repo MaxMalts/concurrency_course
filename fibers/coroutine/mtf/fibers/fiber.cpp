@@ -3,40 +3,10 @@
 #include <mtf/coroutine/impl.hpp>
 #include <mtf/fibers/stacks.hpp>
 
-#include <mtf/fibers/spinlock.hpp>
-#include <mutex>
-
-#include <vector>
-
 namespace mtf::fibers {
 
 using coroutine::impl::Coroutine;
 using tp::StaticThreadPool;
-
-class StackPool {
- public:
-  context::Stack Acquire() {
-    std::unique_lock lock(mutex_);
-
-    if (free_stacks_.empty()) {
-      lock.unlock();
-      return AllocateStack();
-    }
-
-    context::Stack stack = std::move(free_stacks_.back());
-    free_stacks_.pop_back();
-    return stack;
-  }
-
-  void Release(context::Stack stack) {
-    std::lock_guard lock(mutex_);
-    free_stacks_.push_back(std::move(stack));
-  }
-
- private:
-  std::vector<context::Stack> free_stacks_;
-  TASSpinLock mutex_;
-};
 
 thread_local StackPool stack_pool;
 
